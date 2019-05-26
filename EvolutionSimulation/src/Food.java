@@ -2,10 +2,15 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.io.Serializable;
 import java.util.Random;
 
-public class Food {
+public class Food implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4164683327172224549L;
 	private float xCoor;
 	private float yCoor;
 	
@@ -32,7 +37,7 @@ public class Food {
 		
 		this.color = Color.MAGENTA;
 		
-		this.value = randomDouble(4.5, 7.5);
+		this.value = randomDouble(3.5, 7);
 	}
 	
 	public void update() {

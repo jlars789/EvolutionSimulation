@@ -1,11 +1,11 @@
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.Random;
 
 import javax.swing.JPanel;
 
@@ -37,15 +37,38 @@ public void start(){
 public void stop(){
     thread.join
 }
+
+public void tick(){
+    try{
+        thread.sleep(16) (lets the CPU rest between iterations)
+    }
+    catch (Exception e) {
+         
+    }
+    
+    creatureScan();
+}
+
+public void creatureScan(){
+	creature.get(i).update()
+	if(creature.get(i).procreate()){
+	    creatureList.add(creature.get(i).offspring())
+	}
+	
+	
+	if(checkContact(creature.get(i), foodList.get(i)){
+	    creature.eat(foodList.get(i)
+	}
+}
  */
 
-public class Window extends JPanel implements Runnable {
+public class Window extends JPanel implements Runnable, KeyListener {
 	
 	private Thread thread;
 	
 	private static final long serialVersionUID = 1L;
 	public static boolean running;
-	public static boolean simRunning;
+	private static boolean simRunning;
 	public static final int WIDTH = 500;
 	public static final int HEIGHT = 500;
 	
@@ -59,23 +82,31 @@ public class Window extends JPanel implements Runnable {
 	public static ArrayList<Creature> creatureList; 
 	public static ArrayList<Food> foodList;
 	
+	private static AverageStats avg;
+	
+	public static Menu[] menu = new Menu[2];
+	
 	public static Creature finalCreature = null;
+	
+	public static WritableList wl;
 	
 	public Window() {
 		setFocusable(true);
 		setPreferredSize(new Dimension(WIDTH, HEIGHT)); //window size
+		addKeyListener(this);
 		
 		creatureList = new ArrayList<Creature>();
 		foodList = new ArrayList<Food>();
 		
-		simRunning = true;
-		
+		simRunning = false;
 		teamCount = new int[4];
+		menu[0] = new StartMenu();
+		menu[1] = new EndMenu(null);
 		
-		creatureList.add(new RedCreature());
-		creatureList.add(new PinkCreature());
-		creatureList.add(new BlueCreature());
-		creatureList.add(new OrangeCreature());
+		wl = DataReader.readStats();
+		System.out.println("List Size: " + wl.getList().size());
+		avg = new AverageStats(wl);
+		
 		
 		start();
 	}
@@ -88,6 +119,7 @@ public class Window extends JPanel implements Runnable {
 		running = true;
 		thread = new Thread(this);
 		thread.start();
+		menu[0].open(true);
 	}
 	
 	/**
@@ -123,20 +155,18 @@ public class Window extends JPanel implements Runnable {
 		if(simRunning) {
 			this.drawSim(g2d);
 		} else {
-			g2d.setColor(Color.YELLOW);
-			Font f = new Font("Arial", Font.BOLD, 26);
-			g2d.setFont(f);
 			
-			g2d.drawString("Final Creature Stats: ", 75, 50);
-			
-			g2d.drawString("Speed: " + finalCreature.getSpeed(), 75, 100);
-			g2d.drawString("Split Time: " + finalCreature.getMitosisTime() / 62.5 + "s", 75, 150);
-			g2d.drawString("Hunger: " + finalCreature.getCoefficient(), 75, 200);
-			g2d.drawString("Size: " + finalCreature.getSize(), 75, 250);
-			g2d.drawString("Perception: " + finalCreature.getRange(), 75, 300);
+			for(int i = 0; i < menu.length; i++) {
+				if(menu[i].isOpen()) {
+					menu[i].draw(g2d);
+				}
+			}
 		}
 	}
 	
+	/**
+	 * Iterates through all applicable methods each time called. All actions of any objects should be through this method.
+	 */
 	
 	public void tick() {
 		
@@ -156,7 +186,7 @@ public class Window extends JPanel implements Runnable {
 				this.creatureScan();
 				
 				int mod = ((int)(60 / ((((creatureList.size())/4)) + 1) + 1));
-				if(mod < 15) mod = 15;
+				if(mod < 30) mod = 30;
 				if(ticks % mod == 0) {
 					foodList.add(new Food());
 					ticks = 0;
@@ -171,10 +201,22 @@ public class Window extends JPanel implements Runnable {
 				if(extinctCount >= 3) {
 					simRunning = false;
 					finalCreature = creatureList.get(creatureList.size() - 1);
+					menu[1] = new EndMenu(finalCreature);
+					DataWriter.writeOut(finalCreature);
+					wl.add(finalCreature.getStats());
+					DataWriter.createStats(wl);
+					menu[1].open(true);
 				}
 			}
 		}
 	}
+	
+	/**
+	 * Checks to see if a Food object and a Creature object have contact
+	 * @param creature
+	 * @param food
+	 * @return
+	 */
 	
 	private boolean checkContact(Creature creature, Food food) {
 		boolean intersects = false;
@@ -250,6 +292,7 @@ public class Window extends JPanel implements Runnable {
 			int red = 0;
 			int orange = 0;
 			for(int i = 0; i < creatureList.size(); i++) {
+				
 				creatureList.get(i).move();
 				
 				if(creatureList.get(i).getColor().equals(Color.BLUE)) blue++;
@@ -291,6 +334,83 @@ public class Window extends JPanel implements Runnable {
 	
 	public static double elapsedTimeInSeconds() {
 		return Math.abs(elapsedTime - startTime) / 1000;
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		
+		int key = e.getKeyCode();
+		
+		for(int i = 0; i < menu.length; i++) {
+			if(menu[i].isOpen()) {
+				menu[i].interact(key);
+			}
+		}
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public static void setNewSimRunning() {
+		creatureList.add(new RedCreature());
+		creatureList.add(new PinkCreature());
+		creatureList.add(new BlueCreature());
+		creatureList.add(new OrangeCreature());
+		menu[0].open(false);
+		menu[1].open(false);
+		simRunning = true;
+	}
+	
+	public static void setContinueSim() {
+		
+		DataReader.readCreature();
+		
+		Creature parent = DataReader.creatureRead();
+		float[] v = new float[4];
+		int[] s = new int[2];
+		
+		
+		
+		if(parent != null) {
+			Hunger h = parent.getHunger();
+			v[0] = parent.getStats().getSpeed(); v[1] = parent.getStats().getRange(); v[2] = randomFloat(100, 400); v[3] = randomFloat(100, 400);
+			s[0] = parent.getStats().getSize(); s[1] = parent.getStats().getMitosisTime();
+			
+			creatureList.add(new RedCreature(v[0], v[1], s[0], h.copy(), s[1], v[2], v[3], 3));
+			v[2] = randomFloat(100, 400); v[3] = randomFloat(100, 400);
+			creatureList.add(new PinkCreature(v[0], v[1], s[0], h.copy(), s[1], v[2], v[3], 3));
+			v[2] = randomFloat(100, 400); v[3] = randomFloat(100, 400);
+			creatureList.add(new BlueCreature(v[0], v[1], s[0], h.copy(), s[1], v[2], v[3], 3));
+			v[2] = randomFloat(100, 400); v[3] = randomFloat(100, 400);
+			creatureList.add(new OrangeCreature(v[0], v[1], s[0], h.copy(), s[1], v[2], v[3], 3));
+			
+			menu[0].open(false);
+			simRunning = true;
+		} 
+		
+	}
+	
+	private static float randomFloat(float min, float max) {
+		Random random = new Random();
+		return (random.nextFloat() * (max - min)) + min;
+	}
+	
+	public static AverageStats getAverages() {
+		return avg;
+	}
+	
+	public static void eraseFood() {
+		foodList.clear();
 	}
 
 }
