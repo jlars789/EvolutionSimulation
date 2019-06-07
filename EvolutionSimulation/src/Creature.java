@@ -120,7 +120,20 @@ public abstract class Creature implements Serializable {
 			this.alive = false;
 		}
 		this.determine();
+		
+		for(int i = 0; i < Window.creatureList.size(); i++) {
+			if(!Window.creatureList.get(i).equals(this)) {
+				Creature c = Window.creatureList.get(i);
+				if(this.rect.intersects(c.rect)) {
+					if(this.stats.getSize() > c.getStats().getSize()) {
+						c.collide(c.getCollide(c.rect, this.rect));
+					} 
+				}
+			}
+		}
 	}
+	
+	
 	
 	/**
 	 * Moves the creature depending on proximity to Food objects
@@ -301,7 +314,8 @@ public abstract class Creature implements Serializable {
 	public void draw(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setColor(this.color);
-		g2d.fillRect((int)xCoor, (int)yCoor, stats.getSize(), stats.getSize());
+		g2d.fillOval((int)this.xCoor, (int)this.yCoor, stats.getSize(), stats.getSize());
+		//g2d.drawRect((int)this.xCoor, (int)yCoor, stats.getSize(), stats.getSize());
 		
 		/*
 		DecimalFormat df = new DecimalFormat("#.##");
@@ -312,12 +326,55 @@ public abstract class Creature implements Serializable {
 		*/
 	}
 	
+	private int getCollide(Rectangle r1, Rectangle r2) {
+		int dir = 0;
+		
+		if(r1.y + r1.height >= r2.y) {
+			dir = 0;
+		}
+		else if(r1.x <= r2.x + r2.width) {
+			dir = 1;
+		}
+		else if(r1.y <= r2.y + r2.height) {
+			dir = 2;
+		}
+		else if(r1.x  + r1.height >= r2.x) {
+			dir = 3;
+		}
+		
+		return dir;
+	}
+	
+	private void collide(int direction) {
+		this.shift(direction, 1);
+	}
+	
 	public Rectangle getRectangle() {
 		return this.rect;
 	}
 	
 	public boolean isAlive() {
 		return this.alive;
+	}
+	
+	private void shift(int dir, float dist) {
+		switch(direction) {
+		case 0:
+			this.yCoor -= dist;
+		break;
+		
+		case 1:
+			this.xCoor += dist;
+		break;
+		
+		case 2:
+			this.yCoor += dist;
+		break;
+		
+		case 3:
+			this.xCoor -= dist;
+		break;
+		}
 	}
 	
 	/**
