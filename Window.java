@@ -362,6 +362,7 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	}
 	
 	public static void setNewSimRunning() {
+		creatureList.clear();
 		creatureList.add(new RedCreature());
 		creatureList.add(new PinkCreature());
 		creatureList.add(new BlueCreature());
@@ -372,6 +373,8 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	}
 	
 	public static void setContinueSim() {
+		
+		creatureList.clear();
 		
 		DataReader.readCreature();
 		
