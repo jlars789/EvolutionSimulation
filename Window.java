@@ -185,6 +185,10 @@ public class Window extends JPanel implements Runnable, KeyListener {
 				
 				this.creatureScan();
 				
+				if((elapsedTime - startTime) > 30000) {
+					extinctionEvent();
+				}
+				
 				int mod = ((int)(60 / ((((creatureList.size())/4)) + 1) + 1));
 				if(mod < 30) mod = 30;
 				if(ticks % mod == 0) {
@@ -198,17 +202,24 @@ public class Window extends JPanel implements Runnable, KeyListener {
 					}
 				}
 				
-				if(extinctCount >= 3) {
-					simRunning = false;
+				if(extinctCount == 3) {
 					finalCreature = creatureList.get(creatureList.size() - 1);
-					menu[1] = new EndMenu(finalCreature);
-					DataWriter.writeOut(finalCreature);
-					wl.add(finalCreature.getStats());
-					DataWriter.createStats(wl);
-					menu[1].open(true);
+					endSim();
+				} 
+				else if(extinctCount == 4) {
+					endSim();
 				}
 			}
 		}
+	}
+	
+	private static void endSim() {
+		simRunning = false;
+		menu[1] = new EndMenu(finalCreature);
+		DataWriter.writeOut(finalCreature);
+		wl.add(finalCreature.getStats());
+		DataWriter.createStats(wl);
+		menu[1].open(true);
 	}
 	
 	/**
@@ -351,17 +362,14 @@ public class Window extends JPanel implements Runnable, KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	public static void setNewSimRunning() {
+		startTime = (int)System.currentTimeMillis();
 		creatureList.clear();
 		creatureList.add(new RedCreature());
 		creatureList.add(new PinkCreature());
@@ -373,7 +381,7 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	}
 	
 	public static void setContinueSim() {
-		
+		startTime = (int)System.currentTimeMillis();
 		creatureList.clear();
 		
 		DataReader.readCreature();
@@ -402,6 +410,63 @@ public class Window extends JPanel implements Runnable, KeyListener {
 		} 
 		
 	}
+	
+	private static void extinctionEvent() {
+		Color winningTeam = null;
+		int blue = 0;
+		int pink = 0;
+		int red = 0;
+		int orange = 0;
+		for(int i = 0; i < creatureList.size(); i++) {
+			if(creatureList.get(i).getColor().equals(Color.BLUE)) blue++;
+			else if(creatureList.get(i).getColor().equals(Color.PINK)) pink++;
+			else if(creatureList.get(i).getColor().equals(Color.RED)) red++;
+			else if(creatureList.get(i).getColor().equals(Color.ORANGE)) orange++;
+		}
+		
+		
+		boolean blu = (blue > pink);
+		boolean re = (red > orange);
+		if(!blu && !re) {
+			if(pink > orange) {
+				winningTeam = Color.PINK;
+			} else {
+				winningTeam = Color.ORANGE;
+			}
+		}
+		else if(!blu && re) {
+			if(red > pink) {
+				winningTeam = Color.RED;
+			} else {
+				winningTeam = Color.PINK;
+			}
+		} else if(blu && !re){
+			if(blue > orange) {
+				winningTeam = Color.BLUE;
+			} else {
+				winningTeam = Color.ORANGE;
+			}
+		} else {
+			if(blue > red) {
+				winningTeam = Color.BLUE;
+			} else {
+				winningTeam = Color.RED;
+			}
+		}
+		
+		for(int i = creatureList.size() -1; i >= 0; i--) {
+			if(creatureList.get(i).getColor().equals(winningTeam)) {
+				finalCreature = creatureList.get(i);
+				creatureList.clear();
+				for(int j = 0; j < 4; j++) {
+					teamCount[j] = 0;
+				}
+				break;
+			}
+		}
+	}
+	
+	//TODO Add ecosystem collapse
 	
 	private static float randomFloat(float min, float max) {
 		Random random = new Random();

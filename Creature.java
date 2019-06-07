@@ -125,7 +125,7 @@ public abstract class Creature implements Serializable {
 			if(!Window.creatureList.get(i).equals(this)) {
 				Creature c = Window.creatureList.get(i);
 				if(this.rect.intersects(c.rect)) {
-					if(this.stats.getSize() > c.getStats().getSize()) {
+					if(this.stats.getSize() >= c.getStats().getSize()) {
 						c.collide(c.getCollide(c.rect, this.rect));
 					} 
 				}

@@ -12,7 +12,6 @@ public class OrangeCreature extends Creature {
 	public OrangeCreature(float speed, float range, int size, Hunger hunger, int mitosisTime, float x,
 			float y, float variance) {
 		super(color, speed, range, size, hunger, mitosisTime, x, y, variance);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
