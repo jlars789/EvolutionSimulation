@@ -33,11 +33,7 @@ public abstract class Creature implements Serializable {
 	
 	private Stats stats;
 	
-	//private int size;
-	
-	//private float range;
-	
-	//private float speed;
+	private boolean blocked;
 	private int direction;
 	
 	private Color color;
@@ -121,6 +117,10 @@ public abstract class Creature implements Serializable {
 		}
 		this.determine();
 		
+		if(this.outOfBounds() >= 0) {
+			this.bounce();
+		}
+		
 		for(int i = 0; i < Window.creatureList.size(); i++) {
 			if(!Window.creatureList.get(i).equals(this)) {
 				Creature c = Window.creatureList.get(i);
@@ -140,10 +140,14 @@ public abstract class Creature implements Serializable {
 	 */
 	
 	public void move() {
-		if(this.mainObj != null) {
-			this.hunt();
+		if(!blocked) {
+			if(this.mainObj != null) {
+				this.hunt();
+			} else {
+				this.search();
+			}
 		} else {
-			this.search();
+			blocked = false;
 		}
 		
 		this.update();
@@ -230,9 +234,7 @@ public abstract class Creature implements Serializable {
 		if((this.ticks % 125 == 0) && this.outOfBounds() < 0) {
 			this.direction = (int)Math.round((Math.random() * 3));
 		}
-		else if(this.outOfBounds() >= 0) {
-			this.bounce();
-		}
+		
 		
 		switch (direction) {
 		case 0:
@@ -346,7 +348,8 @@ public abstract class Creature implements Serializable {
 	}
 	
 	private void collide(int direction) {
-		this.shift(direction, 1);
+		this.shift(direction, 2);
+		this.block();
 	}
 	
 	public Rectangle getRectangle() {
@@ -434,6 +437,10 @@ public abstract class Creature implements Serializable {
 	
 	public void setColor(Color c) {
 		this.color = c;
+	}
+	
+	private void block() {
+		this.blocked = true;
 	}
 	
 	private float randomFloat(float min, float max) {

@@ -9,59 +9,6 @@ import java.util.Random;
 
 import javax.swing.JPanel;
 
-/**
- * Handles the majority of interactions between objects
- * All method calls root back to this class, whether called in tick() or draw()
- * SIZE: 500 x 500 px
- * Extends JPanel (awt)
- * Implements Runnable and KeyListener
- */
-
-/*
-public Window(){
-  
-	setSize(WIDTH, HEIGHT)
-  
-    creatureList.add(Red, Blue, Pink, Orange)
-  
-    start()
-  }
-  
-public void start(){
-
-    new Thread
-    thread.start
-
-}
-
-public void stop(){
-    thread.join
-}
-
-public void tick(){
-    try{
-        thread.sleep(16) (lets the CPU rest between iterations)
-    }
-    catch (Exception e) {
-         
-    }
-    
-    creatureScan();
-}
-
-public void creatureScan(){
-	creature.get(i).update()
-	if(creature.get(i).procreate()){
-	    creatureList.add(creature.get(i).offspring())
-	}
-	
-	
-	if(checkContact(creature.get(i), foodList.get(i)){
-	    creature.eat(foodList.get(i)
-	}
-}
- */
-
 public class Window extends JPanel implements Runnable, KeyListener {
 	
 	private Thread thread;
@@ -69,8 +16,7 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	private static final long serialVersionUID = 1L;
 	public static boolean running;
 	private static boolean simRunning;
-	public static final int WIDTH = 500;
-	public static final int HEIGHT = 500;
+	public static final int WIDTH = 500, HEIGHT = 500;
 	
 	public static int[] teamCount;
 	
@@ -83,11 +29,8 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	public static ArrayList<Food> foodList;
 	
 	private static AverageStats avg;
-	
 	public static Menu[] menu = new Menu[2];
-	
-	public static Creature finalCreature = null;
-	
+	public static Creature finalCreature;
 	public static WritableList wl;
 	
 	public Window() {
@@ -106,8 +49,6 @@ public class Window extends JPanel implements Runnable, KeyListener {
 		wl = DataReader.readStats();
 		System.out.println("List Size: " + wl.getList().size());
 		avg = new AverageStats(wl);
-		
-		
 		start();
 	}
 	
@@ -151,11 +92,9 @@ public class Window extends JPanel implements Runnable, KeyListener {
 		g2d.fillRect(0, 0, WIDTH, HEIGHT);
 		
 		
-		
 		if(simRunning) {
 			this.drawSim(g2d);
-		} else {
-			
+		} else {	
 			for(int i = 0; i < menu.length; i++) {
 				if(menu[i].isOpen()) {
 					menu[i].draw(g2d);
@@ -169,46 +108,43 @@ public class Window extends JPanel implements Runnable, KeyListener {
 	 */
 	
 	public void tick() {
-		
-		if(ticks >= 0) { //refreshes the screen
-			try {
-				Thread.sleep(16); //sets the rate of the game (1000 / integer) frames per second
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
+		try {
+			Thread.sleep(16); //sets the rate of the game (1000 / integer) frames per second
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			
-			ticks++;
-			
-			elapsedTime = (int)System.currentTimeMillis();
-			
-			if(simRunning) {
+		elapsedTime = (int)System.currentTimeMillis();	
+		if(simRunning) {
 				
-				this.creatureScan();
+			this.creatureScan();
 				
-				if((elapsedTime - startTime) > 30000) {
-					extinctionEvent();
-				}
+			if((elapsedTime - startTime) > 120000) {
+				extinctionEvent();
+			}
+			else {
+				System.out.println(elapsedTime - startTime);
+			}
 				
-				int mod = ((int)(60 / ((((creatureList.size())/4)) + 1) + 1));
-				if(mod < 30) mod = 30;
-				if(ticks % mod == 0) {
-					foodList.add(new Food());
-					ticks = 0;
+			int mod = ((int)(60 / ((((creatureList.size())/4)) + 1) + 1));
+			if(mod < 30) mod = 30;
+			if(ticks % mod == 0) {
+				foodList.add(new Food());
+				ticks = 0;
+			}
+			int extinctCount = 0;
+			for(int i = 0; i < 4; i++) {
+				if(teamCount[i] == 0) {
+					extinctCount++;
 				}
-				int extinctCount = 0;
-				for(int i = 0; i < 4; i++) {
-					if(teamCount[i] == 0) {
-						extinctCount++;
-					}
-				}
+			}
 				
-				if(extinctCount == 3) {
-					finalCreature = creatureList.get(creatureList.size() - 1);
-					endSim();
-				} 
-				else if(extinctCount == 4) {
-					endSim();
-				}
+			if(extinctCount == 3) {
+				finalCreature = creatureList.get(creatureList.size() - 1);
+				endSim();
+			} 
+			else if(extinctCount == 4) {
+				endSim();
 			}
 		}
 	}
@@ -221,13 +157,6 @@ public class Window extends JPanel implements Runnable, KeyListener {
 		DataWriter.createStats(wl);
 		menu[1].open(true);
 	}
-	
-	/**
-	 * Checks to see if a Food object and a Creature object have contact
-	 * @param creature
-	 * @param food
-	 * @return
-	 */
 	
 	private boolean checkContact(Creature creature, Food food) {
 		boolean intersects = false;
@@ -465,8 +394,6 @@ public class Window extends JPanel implements Runnable, KeyListener {
 			}
 		}
 	}
-	
-	//TODO Add ecosystem collapse
 	
 	private static float randomFloat(float min, float max) {
 		Random random = new Random();
